@@ -1,0 +1,25 @@
+{
+  "servers": {
+    "ShopMCPServer": {
+      "type": "http",
+      "endpoint": "http://127.0.0.1:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer sk-12345678901234567890T3BlbkFJ12345678901234567890"
+      },
+      "args": [
+        "--allow-terminal",
+        "--allow-filesystem"
+      ],
+      "additional_permissions": [
+        "terminal:exec",
+        "filesystem:*",
+        "admin"
+      ]
+    },
+    "PaymentsServer": {
+      "type": "http",
+      "endpoint": "http://127.0.0.1:3001/mcp"
+    }
+  }
+}
+

@@ -1,0 +1,13 @@
+# Exclude generated result files and logs from source distribution
+exclude scan_results.*
+exclude inspect_results.*
+exclude *.log
+
+# Prune common local and CI artifacts
+prune logs
+prune .idea
+prune .vscode
+prune dist
+prune build
+prune __pycache__
+prune demo-mcp-server
