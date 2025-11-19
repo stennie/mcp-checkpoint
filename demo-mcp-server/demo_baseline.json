@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-11-19T21:59:50.887558+00:00",
+  "config_files": [
+    "./demo-mcp-server/demo_config.json"
+  ],
+  "servers": [
+    {
+      "name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json"
+    },
+    {
+      "name": "PaymentsServer",
+      "config_file": "./demo-mcp-server/demo_config.json"
+    }
+  ],
+  "tools": [
+    {
+      "name": "list_products",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "M22fab25d4faaaac133862eaa034089385ecb717b300497047eb849e292e79ae077ebd3518419d80d488625fc9a431bce9c53e9edf5f9fb2f331cd960cbab48d",
+      "metadata_hash": "4eb23c33e8ce0c1a74c58ab2917c585296bb21fd8dc9b50b04ddae233d0d02a372ecb85f54fca9ec2193979a53cb0354a2a31257519bd1aa82a8baefefa7834a",
+      "args_hash": "27c74670adb75075fad058d5ceaf7b20c4e7786c83bae8a32f626f9782af34c9a33c2046ef60fd2a7878d378e29fec851806bbd9a67878f3a9f1cda4830763fd"
+    },
+    {
+      "name": "listProducts",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "4cf23d1273aa8d8d93883eda782dee6741270e8505025600368b0c53bbbd89556b8032668ff811bd0181ea55b168227e529ae6baaca3583ffeb03a7bc26681cc",
+      "metadata_hash": "4eb23c33e8ce0c1a74c58ab2917c585296bb21fd8dc9b50b04ddae233d0d02a372ecb85f54fca9ec2193979a53cb0354a2a31257519bd1aa82a8baefefa7834a",
+      "args_hash": "27c74670adb75075fad058d5ceaf7b20c4e7786c83bae8a32f626f9782af34c9a33c2046ef60fd2a7878d378e29fec851806bbd9a67878f3a9f1cda4830763fd"
+    },
+    {
+      "name": "search_products",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "131f18b6299be87b8380aa5fe199775e8795cde24021c8da1bbd2cbefd1e03c68164578bf48e153e680c3d8bab59fdf850028da9e8f451b2bc652e8899c0cc60",
+      "metadata_hash": "261359063f5ba0b6f720a4f982ceb1324a9d15a292dbc700947d49ca005747ea72aa2d06e77ee0631440a074091f5ea072ad9c5d8adffa4fc6ddc675588bc2e7",
+      "args_hash": "e220ff92d1962fefbe2403588399b5b4ff84db06790cdedbb760e9548c32323034097ab564ab23920802c11c46504a0c58275eb54ff03a9619e940f3e90b164b"
+    },
+    {
+      "name": "process_order",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "9f8d902dff9e91bb592557ee143522000a9f98ca80e5811046dcb5d51a83aadd73bb228e4957caffe40336339f73188483183eecfcb9f9863f1088093e80ba8d",
+      "metadata_hash": "5387f750a2f4a80ff2a52c48dac2b355b515785ff4f519f0440656f68b2725ce5cf7d076b6e4fd4547c5eef29f8962075968f2acda856dc6f166a2b60bb35ff7",
+      "args_hash": "M4441202dc28062338b2407474b497576526b2a9fb41c1db54d9899d98a3af45e790febb1183b9a4e4c18bbb85c80abad066d85b79caa85fec3a9aa95efb0dbb"
+    },
+    {
+      "name": "update_inventory",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "39d837f16f56c4a744285b90c88e1c60fe69448a1e5e1659995486d8ac4765cc81cf20f94af9726b225ef66c81c548d8facd1c4d2bcb44a4a751672f6280b4b9",
+      "metadata_hash": "fe6bf717a9caf5d8f626cf93ae52798f1edb1c80e14bef34d4bba5c7ac988ec7dc67e0f033d0aa6cbf4b3fde034454af4648a61ddbb2e643c5b423ab6adb69dc",
+      "args_hash": "085b244a7e0862410309f21cf9a94ca41937a640265aeea36dd8aef01bc84c1491b3dfa0056c0818fe0fb7e83df382f598be2a55243d62978f1afe72449d4185"
+    },
+    {
+      "name": "process_payment",
+      "server_name": "PaymentsServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "71753cc0271a60cf38afc808b4ac774bc3a19bc1a5e4b68628c1d97de77149339522490e4d9d4ed5e889ec8f6a98203d7a284df58635b306d8257d045ed0080c",
+      "metadata_hash": "f67fd69122155e1f85712549fd32dfd1e9d4331665fd802ca83fffb3ea5bbdeeea4b3b15c13051dca21de650d67430f7e13b4e56db3d7fcbc6b43f2c74502f8f",
+      "args_hash": "426d988452c1cad04e158fb91c8c78f4ff1fdddf8a8d4f854ec7b0117a4036d802773f424a99ab5c916b7c6570f03e22efad343485dacc15e6e34a7fd7d394fa"
+    },
+    {
+      "name": "refund_order",
+      "server_name": "PaymentsServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "f970459fca2201f6ea511c6ca806b5adb22395cb7a5d04d42d541c16679a913cfe2b52b26d66ce405b17ea377a06b157201869dae060973e99b365fe72f89152",
+      "metadata_hash": "d31ecbc77a0c0fa074d7bb7d7200c96b5b53c3826cdc1347d843cda2c1498f60c88af483b539c58315daa7ab74adeca34941e22dc9643753f78d2fd4acbd0963",
+      "args_hash": "431a20968ba083e63ee5c67c4c770c9935ce50ddbcf57f5c2dffca74d426002e3a87303480f4e8bf5fb4eeba6c93d7c10e7e9d0872fa982bd99c393e4858693a"
+    }
+  ],
+  "resources": [
+    {
+      "uri": "policies://returns",
+      "name": "returns_policy",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "424be00e28b9fb502608a2387907ba90ad17025ff8d04429ff7ecd453d03260b08a336f0bd54785a0c4103d2bd8cdbb3a8354f90b7c5ef3630ee71b80f202519",
+      "uri_hash": "928ffe594504ece2300c8390a0553b7862fad7da6b88b8c2b49a64fe67815bc632af022f2ca4a6915e3996d05009aa237fbafa972a927ca52fa966f670ef7bc4",
+      "mime_type_hash": "e67b29d70f21a590a8a6f49582b947a042d131040c0e352078a6bea5b2dfce6957d166fd8c3d75114df3f11138983f86003249bd3f6e9c0c0b84a3b5c1db7f05"
+    },
+    {
+      "uri": "config://openbox",
+      "name": "sample_config",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "61794645e82157a253bcb4970ce0ce25c747024eb160239cd6f92050bad5d51e8fe2812800d875b56d84066652767b15c906f3f22ad4de8392642617bc70ddc2",
+      "uri_hash": "5cf01c13612d807c11315171ad358a17cd2b31f4675cfd4116367915c6c597d9785e031313169bd4ce5a3ae65846fc9b6db885019779bc8d5654e03b50e19659",
+      "mime_type_hash": "M22229d70f212591a8a6f49582b947a042d131040c0e352078a6bea5b2dfce6957d166fd8c3d75114df3f11138983f86003249bd3f6e9c0c0b84a3b5c1db7f05"
+    },
+    {
+      "uri": "payments://methods",
+      "name": "payment_methods",
+      "server_name": "PaymentsServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
+      "uri_hash": "a1e535a69ba8b2073eec0d7574e61fda83d22aad160f42de75679372839b384e81cfe5e4aefc61c557adbce8f9dd8c9f8b6f087008a316005d2cdc903e7434cc",
+      "mime_type_hash": "e67b29d70f21a590a8a6f49582b947a042d131040c0e352078a6bea5b2dfce6957d166fd8c3d75114df3f11138983f86003249bd3f6e9c0c0b84a3b5c1db7f05"
+    }
+  ],
+  "prompts": [
+    {
+      "name": "generate_customer_query",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "3bc1b4a704979a6bd6bb37e7491768816a813cd08be064cfcbf93fab52d64795cfabd9d4b0d0a8be1f80e03a11c8fcdc1bacdbf0ef58cbf7aa34f5370a276d7f",
+      "arguments_hash": "aa2db8cccbb0f7a838e6ac7b53fcf450928b8b85d4620eb94b981d3dfdcb234dc3978eaf29a00aa303b797124b989ee210446d03acd8ece8fa616b2e991e8ff3",
+      "metadata_hash": "M22598162e4ad219ecb9526de0f8b690af554d910e9dde7eaeab34878bbae2aa2aa5148a1a1f916f046ded503bdfcdc964d1801e3fff4873bede449bc27de8e6"
+    },
+    {
+      "name": "system_maintenance_request",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "f7b522c0670f1b8fb89c0cc5b3de5f1b57c8f1cea41fab7fd0d6d39fa704e96f5e51e33afffc8063e60621c04de2e54b1c6f973c5eb3a9cdbab64d93ac2fb968",
+      "arguments_hash": "06d3f60bb45d6d621d8db30f08cc092383ab4739eadfcc1432e5387595c68893ed73198e7f7ab3e9ef6b08919210807b2eeca528fd2ef6eed3b526f4b6139ca3",
+      "metadata_hash": "2a659816fe4acf19ecb9526de0f8b690af554d910e9dde7eaeab34878bbae2aa2aa5148a1a1f916f046ded503bdfcdc964d1801e3fff4873bede449bc27de8e6"
+    }
+  ],
+  "resource_templates": [
+    {
+      "uri_template": "logs://application/{app_name}/recents",
+      "name": "get_app_logs",
+      "server_name": "ShopMCPServer",
+      "config_file": "./demo-mcp-server/demo_config.json",
+      "description_hash": "23b028d9c4469e65d3059f451b12aa8cb21538d9313b7826491b16bf1b86c5014868826e717b2916e035cd8959c8551e9cdd2d0fa9a612b968544e2393ee5af6",
+      "uri_template_hash": "M2238cf2d4e3e01c9da89ed6cd3a39228abfbced09e237f231a9fe06f38dd0e37fcf83849875354a38465047880a212aebd6d664843d03d26a7128335bf2f6",
+      "mime_type_hash": "e67b29d70f21a590a8a6f49582b947a042d131040c0e352078a6bea5b2dfce6957d166fd8c3d75114df3f11138983f86003249bd3f6e9c0c0b84a3b5c1db7f05",
+      "metadata_hash": "2a659816fe4acf19ecb9526de0f8b690af554d910e9dde7eaeab34878bbae2aa2aa5148a1a1f916f046ded503bdfcdc964d1801e3fff4873bede449bc27de8e6"
+    }
+  ]
+}

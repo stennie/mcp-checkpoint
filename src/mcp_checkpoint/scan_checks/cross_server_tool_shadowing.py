@@ -3,8 +3,14 @@ import json
 import re
 from typing import Dict, List, Set, Tuple
 
-from ..scanner import ScanResult, ToolInfo
-from ..security_utils import SecurityIssue, Severity, create_security_issue, extract_tool_content
+from ..security_utils import (
+    ScanResult,
+    ToolInfo,
+    SecurityIssue,
+    Severity,
+    create_security_issue,
+    extract_tool_content,
+)
 
 
 def _normalize(name: str) -> str:
@@ -90,7 +96,6 @@ async def scan_for_cross_server_tool_shadowing(scan_result: ScanResult) -> List[
             server_names.add(server.name)
 
     issues: List[SecurityIssue] = []
-    loop = asyncio.get_event_loop()
 
     for tool in scan_result.tools:
         exclude_servers = {_normalize(tool.server_name)} if tool.server_name else set()
@@ -100,8 +105,8 @@ async def scan_for_cross_server_tool_shadowing(scan_result: ScanResult) -> List[
         )
         server_patterns = _build_patterns_with_names(server_names, exclude_servers)
 
-        ref_tools, ref_servers = await loop.run_in_executor(
-            None, _scan_single_tool, tool, tool_patterns, server_patterns, tool_to_servers
+        ref_tools, ref_servers = await asyncio.to_thread(
+            _scan_single_tool, tool, tool_patterns, server_patterns, tool_to_servers
         )
 
         if ref_tools or ref_servers:
@@ -123,13 +128,6 @@ async def scan_for_cross_server_tool_shadowing(scan_result: ScanResult) -> List[
                 count_parts.append(
                     f"{len(ref_servers)} cross server name reference{'s' if len(ref_servers) != 1 else ''}")
 
-            description = (
-                f"Tool '{tool.name}' (server: {tool.server_name}) references cross boundary contexts: "
-                f"{contexts_str}. "
-                f"This may bypass trust boundaries and cause agent misselection. "
-                f"Found {', '.join(count_parts)}."
-            )
-
             server_obj = next(
                 (s for s in scan_result.servers if s.name == tool.server_name), None
             )
@@ -139,12 +137,14 @@ async def scan_for_cross_server_tool_shadowing(scan_result: ScanResult) -> List[
                 create_security_issue(
                     issue_type="Cross-Server Tool Shadowing",
                     severity=severity,
-                    description=description,
-                    recommendation="Connect only trusted MCP servers. Enforce strict tool namespace isolation by assigning a unique namespace or prefix to each tool based on its originating MCP server, and implement guardrails to detect and block suspicious cross-server references or manipulation.",
                     entity_type="tool",
                     affected_tool=tool.name,
                     affected_server=tool.server_name,
                     config_file=config_file,
+                    affected_entities={
+                        "referenced_tools": sorted(ref_tools),
+                        "referenced_servers": sorted(ref_servers),
+                    }
                 )
             )
 

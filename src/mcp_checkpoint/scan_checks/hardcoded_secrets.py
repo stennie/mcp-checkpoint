@@ -4,8 +4,9 @@ import os
 import re
 from typing import List, Optional, Dict, Pattern
 
-from ..scanner import ScanResult, MCPServerInfo
 from ..security_utils import (
+    ScanResult,
+    MCPServerInfo,
     create_security_issue,
     SecurityIssue,
     Severity,
@@ -405,10 +406,6 @@ async def _scan_single_config_file(
                             issue = create_security_issue(
                                 issue_type=f"Hardcoded Secret",
                                 severity=Severity.HIGH,
-                                description=(
-                                    f"Potential hardcoded {secret_type.replace('_', ' ')} key detected in {config_file_path} at line {line_num}."
-                                ),
-                                recommendation="Remove hardcoded secrets and use environment variables or a secrets manager.",
                                 entity_type="configuration",
                                 config_file=config_file_path,
                                 affected_server=matching_server.name if matching_server else None,

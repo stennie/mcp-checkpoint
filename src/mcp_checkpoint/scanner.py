@@ -3,10 +3,19 @@ import json
 import yaml
 import asyncio
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any, Tuple, Callable
 from pathlib import Path
-from dataclasses import dataclass, field
-from enum import Enum
+from .config_validator import load_and_validate_config
+from .connector import MCPConnector
+from .security_utils import (
+    TransportType,
+    MCPServerInfo,
+    ToolInfo,
+    ResourceInfo,
+    PromptInfo,
+    ResourceTemplateInfo,
+    ScanResult
+)
 
 logger = logging.getLogger(__name__)
 
@@ -17,75 +26,6 @@ def _safe_progress_callback(progress, event: str, data: Dict[str, Any]):
             progress(event, data)
         except Exception:
             pass
-
-
-class TransportType(Enum):
-    STDIO = "stdio"
-    HTTP = "http"
-    SSE = "sse"
-
-
-@dataclass
-class MCPServerInfo:
-    name: str
-    type: TransportType
-    endpoint: Optional[str] = None
-    command: Optional[str] = None
-    args: List[str] = None
-    headers: Dict[str, str] = None
-    env: Dict[str, str] = None
-    disabled: bool = False
-    tools: List[str] = None
-    resources: List[str] = None
-    additional_permissions: List[str] = None
-    source_file: Optional[str] = None
-    
-    def __post_init__(self):
-        if self.args is None:
-            self.args = []
-        if self.headers is None:
-            self.headers = {}
-        if self.env is None:
-            self.env = {}
-        if self.tools is None:
-            self.tools = []
-        if self.resources is None:
-            self.resources = []
-
-
-@dataclass
-class ResourceInfo:
-    uri: str
-    name: str
-    description: str
-    mime_type: str
-    server_name: str
-    server_endpoint: str
-    title: Optional[str] = None
-    tags: List[str] = field(default_factory=list)
-
-
-@dataclass
-class ToolInfo:
-    name: str
-    
-    description: str = ""
-    input_schema: Dict[str, Any] = field(default_factory=dict)
-    server_name: str = ""
-    server_endpoint: str = ""
-    title: Optional[str] = None
-    output_schema: Optional[Dict[str, Any]] = None
-    tags: List[str] = field(default_factory=list)
-
-
-@dataclass
-class ScanResult:
-    servers: List[MCPServerInfo]
-    tools: List[ToolInfo]
-    resources: List[ResourceInfo]
-    config_files: List[str]
-    errors: List[str]
-    status: List[str]
 
 
 class MCPConfigScanner:
@@ -162,11 +102,19 @@ class MCPConfigScanner:
         return servers
     
     async def parse_single_config(self, config_file: str, is_user_provided: bool = False) -> List[MCPServerInfo]:
-        with open(config_file, 'r') as f:
-            if config_file.endswith(('.yaml', '.yml')):
-                config = yaml.safe_load(f)
-            else:
-                config = json.load(f)
+        
+        
+        config, validation_errors = load_and_validate_config(config_file)
+        
+        if config is None:
+            if validation_errors:
+                error_msg = "; ".join(validation_errors)
+                raise ValueError(f"Configuration validation failed for '{config_file}': {error_msg}")
+            raise ValueError(f"Failed to load configuration file: {config_file}")
+        
+        if validation_errors and is_user_provided:
+            for error in validation_errors:
+                logger.warning(f"Configuration validation warning: {error}")
         
         servers = []
         
@@ -182,7 +130,7 @@ class MCPConfigScanner:
                 server_info = self.create_server_info(server_name, server_config, config_file, is_user_provided)
                 servers.append(server_info)
             except Exception as e:
-                logger.error(f"Failed to parse server {server_name}: {e}")
+                logger.error(f"Failed to parse server {server_name}: {e}", exc_info=False)
         
         return servers
     
@@ -197,7 +145,8 @@ class MCPConfigScanner:
                 server_type = 'http'
             else:
                 server_type = 'stdio'
-                logger.info(f"Server '{name}' missing 'type' field, defaulting to 'stdio' based on configuration")
+                logger.warning(f"Server '{name}' missing 'type' field, so defaulting to 'stdio' "
+                             f"Consider explicitly setting the 'type' field in the configuration.")
 
         try:
             transport_type = TransportType(server_type.lower())
@@ -287,43 +236,47 @@ class MCPConfigScanner:
 
         return 'custom'
 
-    async def discover_tools_and_resources(self, servers: List[MCPServerInfo], progress=None) -> Tuple[
-        List[ToolInfo], List[ResourceInfo]]:
-        from .connector import MCPConnector
-        
+    async def discover_all(self, servers: List[MCPServerInfo], progress: Optional[Callable[[str, Dict[str, Any]], None]] = None) -> Tuple[
+        List[ToolInfo], List[ResourceInfo], List[PromptInfo], List[ResourceTemplateInfo]]:
         connector = MCPConnector()
         all_tools: List[ToolInfo] = []
         all_resources: List[ResourceInfo] = []
+        all_prompts: List[PromptInfo] = []
+        all_resource_templates: List[ResourceTemplateInfo] = []
         
         async def discover_for_server(server: MCPServerInfo) -> Tuple[
-            List[ToolInfo], List[ResourceInfo], str, Optional[str]]:
+            List[ToolInfo], List[ResourceInfo], List[PromptInfo], List[ResourceTemplateInfo], str, Optional[str]]:
             if server.disabled:
                 logger.info(f"Skipping disabled server: {server.name}")
-                return [], [], server.name, None
+                return [], [], [], [], server.name, None
             try:
                 _safe_progress_callback(progress, 'connecting', {"server": server.name})
-                server_tools, server_resources = await connector.discover_tools_and_resources(server, progress=progress)
+                server_tools, server_resources, server_prompts, server_resource_templates = await connector.discover_all(server, progress=progress)
                 logger.info(
-                    f"Discovered {len(server_tools)} tools and {len(server_resources)} resources from {server.name}")
+                    f"Discovered {len(server_tools)} tools, {len(server_resources)} resources, {len(server_prompts)} prompts, {len(server_resource_templates)} resource templates from {server.name}")
                 _safe_progress_callback(progress, 'connected', {
                     "server": server.name,
                     "tools": len(server_tools),
-                    "resources": len(server_resources)
+                    "resources": len(server_resources),
+                    "prompts": len(server_prompts),
+                    "resource_templates": len(server_resource_templates)
                 })
-                return server_tools, server_resources, server.name, None
+                return server_tools, server_resources, server_prompts, server_resource_templates, server.name, None
             except Exception as e:
-                logger.error(f"Failed to discover from {server.name}: {e}")
+                logger.error(f"Failed to discover from {server.name}: {e}", exc_info=False)
                 _safe_progress_callback(progress, 'failed', {"server": server.name, "error": str(e)})
-                return [], [], server.name, str(e)
+                return [], [], [], [], server.name, str(e)
 
         tasks = [asyncio.create_task(discover_for_server(s)) for s in servers]
         results = await asyncio.gather(*tasks, return_exceptions=False)
 
-        for tools, resources, _srv, _err in results:
+        for tools, resources, prompts, templates, _srv, _err in results:
             all_tools.extend(tools)
             all_resources.extend(resources)
+            all_prompts.extend(prompts)
+            all_resource_templates.extend(templates)
 
-        return all_tools, all_resources
+        return all_tools, all_resources, all_prompts, all_resource_templates
     
     def get_scan_summary(self, scan_result: ScanResult) -> Dict[str, Any]:
         if not scan_result:
@@ -333,6 +286,8 @@ class MCPConfigScanner:
             "total_servers": len(scan_result.servers),
             "total_tools": len(scan_result.tools),
             "total_resources": len(scan_result.resources),
+            "total_prompts": len(scan_result.prompts),
+            "total_resource_templates": len(scan_result.resource_templates),
             "config_files": len(scan_result.config_files),
             "errors": len(scan_result.errors),
             "status": len(scan_result.status),

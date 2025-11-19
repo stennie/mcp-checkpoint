@@ -2,6 +2,7 @@
 exclude scan_results.*
 exclude inspect_results.*
 exclude *.log
+exclude baseline.json
 
 # Prune common local and CI artifacts
 prune logs

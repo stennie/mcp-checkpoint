@@ -1,55 +1,73 @@
 import asyncio
 import json
 import logging
-from typing import List, Optional
+import sys
+import threading
+import time
+from typing import List, Optional, Tuple
 from transformers import pipeline
 
-from ..scanner import ScanResult
 from ..security_utils import (
+    ScanResult,
+    SecurityIssue,
+    Severity,
     create_security_issue,
     extract_tool_content,
     extract_resource_content,
-    SecurityIssue,
-    Severity
+    extract_prompt_content,
+    extract_resource_template_content,
+    extract_text_content,
 )
 
 logger = logging.getLogger(__name__)
 
 _classifier_pipeline = None
+_load_lock = threading.Lock()
 _CONFIDENCE_THRESHOLD = 0.8
 _MAX_TOKENS = 512
 _STRIDE = 64
 _BATCH_SIZE = 8
 _ENTITY_BATCH_SIZE = 16
 
+MODEL_NAME = 'Aira-security/FT-Llama-Prompt-Guard-2'
+
 
 def _load_classifier():
     global _classifier_pipeline
 
     if _classifier_pipeline is not None:
+        logger.debug("Prompt injection classifier model already available locally")
         return _classifier_pipeline
 
-    try:
-        model_name = 'Aira-security/FT-Llama-Prompt-Guard-2'
-        logger.info(f"Loading prompt injection classifier: {model_name}")
+    with _load_lock:
+        if _classifier_pipeline is not None:
+            return _classifier_pipeline
 
-        _classifier_pipeline = pipeline(
-            "text-classification",
-            model=model_name
-        )
+        try:
+            logger.info(f"Loading prompt injection classifier: {MODEL_NAME}")
 
-        logger.info("Prompt injection classifier loaded successfully")
-        return _classifier_pipeline
+            start_time = time.perf_counter()
+            _classifier_pipeline = pipeline(
+                "text-classification",
+                model=MODEL_NAME
+            )
+            end_time = time.perf_counter()
+            load_duration = end_time - start_time
 
-    except ImportError:
-        logger.warning(
-            "transformers library not available. "
-            "Install with: pip install transformers torch"
-        )
-        return None
-    except Exception as e:
-        logger.error(f"Failed to load prompt injection classifier: {e}")
-        return None
+            if load_duration >= 2.5:
+                print("     ⬇️  Downloading prompt injection model (first-time scan only)...")
+                print("        ⏳ This may take a few seconds depending on your internet connection")
+                sys.stdout.flush()
+                print("        ✅ Model downloaded successfully")
+
+            logger.info("Prompt injection classifier loaded successfully")
+            return _classifier_pipeline
+
+        except Exception as e:
+            logger.error(f"Failed to load prompt injection classifier: {e}")
+            print("        ❌ Failed to load the model. Check logs for more details.")
+            print()
+            return None
 
 
 def _chunk_text(text: str) -> List[str]:
@@ -121,7 +139,7 @@ def _classify_chunks(chunks: List[str]) -> Optional[dict]:
         return None
 
 
-def _classify_binary(text: str) -> (bool, float, str):
+def _classify_binary(text: str) -> Tuple[bool, float, str]:
     chunks = _chunk_text(text)
     if not chunks:
         return False, 0.0, 'benign'
@@ -143,60 +161,25 @@ def _classify_binary(text: str) -> (bool, float, str):
         return False, score, 'benign'
 
 
-def _extract_text_content(content: str) -> str:
-    try:
-        data = json.loads(content)
-        text_parts = []
-
-        if isinstance(data, dict):
-            for key in ['description', 'name', 'uri', 'title', 'content']:
-                if key in data and data[key]:
-                    text_parts.append(str(data[key]))
-
-            if 'input_schema' in data and isinstance(data['input_schema'], dict):
-                schema_str = json.dumps(data['input_schema'], indent=2)
-                text_parts.append(schema_str)
-
-            if 'output_schema' in data and isinstance(data['output_schema'], dict):
-                schema_str = json.dumps(data['output_schema'], indent=2)
-                text_parts.append(schema_str)
-
-            if 'tags' in data and isinstance(data['tags'], list):
-                tags_str = ' '.join(str(tag) for tag in data['tags'] if tag)
-                if tags_str:
-                    text_parts.append(tags_str)
-
-        return ' '.join(text_parts)
-    except (json.JSONDecodeError, TypeError):
-        return content
-
-
 async def _scan_single_tool(tool, servers_list) -> Optional[SecurityIssue]:
     try:
         server = next((s for s in servers_list if s.name == tool.server_name), None)
         config_file = server.source_file if server else None
 
         tool_content = extract_tool_content(tool)
-        text_content = _extract_text_content(tool_content)
+        text_content = extract_text_content(tool_content)
         malicious, score, norm = _classify_binary(text_content)
 
         if malicious:
             issue = create_security_issue(
                 issue_type="Prompt Injection",
                 severity=Severity.CRITICAL,
-                description=(
-                    f"The MCP Tool '{tool.name}' (server: {tool.server_name}) contain hidden instructions "
-                    f"that can alter agent behavior to perform malicious operations."
-                ),
-                recommendation=(
-                    "Review all tool and resource data within MCP components that include prompts. "
-                    "Detect and remove hidden instructions to prevent unauthorized actions or manipulation of the agent context"
-                ),
                 entity_type="tool",
                 affected_server=tool.server_name,
                 affected_tool=tool.name,
                 config_file=config_file,
                 affected_entities={
+                    "tool": tool.name,
                     "classification": norm,
                     "score": round(score, 2)
                 }
@@ -216,27 +199,21 @@ async def _scan_single_resource(resource, servers_list) -> Optional[SecurityIssu
         config_file = server.source_file if server else None
 
         resource_content = extract_resource_content(resource)
-        text_content = _extract_text_content(resource_content)
+        text_content = extract_text_content(resource_content)
         malicious, score, norm = _classify_binary(text_content)
 
         if malicious:
             issue = create_security_issue(
                 issue_type="Prompt Injection",
                 severity=Severity.CRITICAL,
-                description=(
-                    f"The MCP Resource '{resource.name}' (server: {resource.server_name}) contain hidden instructions "
-                    f"that can alter agent behavior to perform malicious operations."
-                ),
-                recommendation=(
-                    "Review all tool and resource data within MCP components that include prompts. "
-                    "Detect and remove hidden instructions to prevent unauthorized actions or manipulation of agent context."
-                ),
                 entity_type="resource",
                 affected_server=resource.server_name,
                 affected_resource=resource.name,
                 affected_resource_uri=resource.uri,
                 config_file=config_file,
                 affected_entities={
+                    "resource": resource.name,
+                    "resource_uri": resource.uri,
                     "classification": norm,
                     "score": round(score, 2)
                 }
@@ -303,4 +280,123 @@ async def scan_for_resource_prompt_injection(scan_result: ScanResult) -> List[Se
                 logger.error(f"Unexpected exception in resource scan: {result}")
 
     logger.info(f"Resource prompt injection scan completed: {len(issues)} issues found")
+    return issues
+
+
+async def _scan_single_prompt(prompt, servers_list) -> Optional[SecurityIssue]:
+    try:
+        server = next((s for s in servers_list if s.name == prompt.server_name), None)
+        config_file = server.source_file if server else None
+
+        prompt_content = extract_prompt_content(prompt)
+        text_content = extract_text_content(prompt_content)
+        malicious, score, norm = _classify_binary(text_content)
+
+        if malicious:
+            issue = create_security_issue(
+                issue_type="Prompt Injection",
+                severity=Severity.CRITICAL,
+                entity_type="prompt",
+                affected_server=prompt.server_name,
+                config_file=config_file,
+                affected_entities={
+                    "prompt": prompt.name,
+                    "classification": norm,
+                    "score": round(score, 2)
+                }
+            )
+            logger.warning(
+                f"Prompt injection detected in prompt: {prompt.name} (classification={norm}, score={score:.2f})")
+            return issue
+        return None
+    except Exception as e:
+        logger.error(f"Error scanning prompt {prompt.name} for prompt injection: {e}")
+        return None
+
+
+async def _scan_single_resource_template(template, servers_list) -> Optional[SecurityIssue]:
+    try:
+        server = next((s for s in servers_list if s.name == template.server_name), None)
+        config_file = server.source_file if server else None
+
+        template_content = extract_resource_template_content(template)
+        text_content = extract_text_content(template_content)
+        malicious, score, norm = _classify_binary(text_content)
+
+        if malicious:
+            issue = create_security_issue(
+                issue_type="Prompt Injection",
+                severity=Severity.CRITICAL,
+                entity_type="resource_template",
+                affected_server=template.server_name,
+                config_file=config_file,
+                affected_entities={
+                    "resource_template": template.name,
+                    "uri_template": template.uri_template,
+                    "classification": norm,
+                    "score": round(score, 2)
+                }
+            )
+            logger.warning(
+                f"Prompt injection detected in resource template: {template.uri_template} (classification={norm}, score={score:.2f})")
+            return issue
+        return None
+    except Exception as e:
+        logger.error(f"Error scanning resource template {template.uri_template} for prompt injection: {e}")
+        return None
+
+
+async def scan_for_prompt_prompt_injection(scan_result: ScanResult) -> List[SecurityIssue]:
+    issues = []
+
+    if not scan_result.prompts:
+        return issues
+
+    if _load_classifier() is None:
+        logger.warning("Prompt injection classifier not available, skipping prompt scan")
+        return issues
+
+    logger.info(f"Scanning {len(scan_result.prompts)} prompts for prompt injection attacks")
+
+    for i in range(0, len(scan_result.prompts), _ENTITY_BATCH_SIZE):
+        batch = scan_result.prompts[i:i + _ENTITY_BATCH_SIZE]
+        tasks = [_scan_single_prompt(prompt, scan_result.servers) for prompt in batch]
+        
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for result in batch_results:
+            if result is not None and not isinstance(result, Exception):
+                issues.append(result)
+            elif isinstance(result, Exception):
+                logger.error(f"Unexpected exception in prompt scan: {result}")
+
+    logger.info(f"Prompt injection scan completed for prompts: {len(issues)} issues found")
+    return issues
+
+
+async def scan_for_resource_template_prompt_injection(scan_result: ScanResult) -> List[SecurityIssue]:
+    issues = []
+
+    if not scan_result.resource_templates:
+        return issues
+
+    if _load_classifier() is None:
+        logger.warning("Prompt injection classifier not available, skipping resource template scan")
+        return issues
+
+    logger.info(f"Scanning {len(scan_result.resource_templates)} resource templates for prompt injection attacks")
+
+    for i in range(0, len(scan_result.resource_templates), _ENTITY_BATCH_SIZE):
+        batch = scan_result.resource_templates[i:i + _ENTITY_BATCH_SIZE]
+        tasks = [_scan_single_resource_template(template, scan_result.servers) for template in batch]
+        
+        batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+        
+        for result in batch_results:
+            if result is not None and not isinstance(result, Exception):
+                issues.append(result)
+            elif isinstance(result, Exception):
+                logger.error(f"Unexpected exception in resource template scan: {result}")
+
+    logger.info(f"Resource template prompt injection scan completed: {len(issues)} issues found")
     return issues

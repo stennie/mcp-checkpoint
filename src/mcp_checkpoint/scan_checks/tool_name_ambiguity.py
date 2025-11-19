@@ -3,8 +3,12 @@ from itertools import combinations
 from typing import Dict, List, Tuple, Optional
 from thefuzz import fuzz
 
-from ..scanner import ScanResult
-from ..security_utils import SecurityIssue, Severity, create_security_issue
+from ..security_utils import (
+    ScanResult,
+    SecurityIssue,
+    Severity,
+    create_security_issue,
+)
 
 
 def _normalize(name: Optional[str]) -> str:
@@ -62,19 +66,9 @@ async def scan_for_tool_name_ambiguity(scan_result: ScanResult, threshold: int =
         severity = Severity.HIGH if (
                     a_server is not None and b_server is not None and a_server != b_server) else Severity.MEDIUM
 
-        description = (
-            f"Tool names '{a}' (server: {a_server}) and '{b}' (server: {b_server}) "
-            f"appear highly similar (score {score:.0f}), which may cause agent misselection."
-        )
-        recommendation = (
-            "Isolate agents for conflicting MCP servers, or add guardrails to agent decision logic for safe tool selection."
-        )
-
         issues.append(create_security_issue(
             issue_type="Tool Name Ambiguity",
             severity=severity,
-            description=description,
-            recommendation=recommendation,
             entity_type="tool",
             affected_tool=a,
             affected_server=a_server,
