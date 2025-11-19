@@ -90,7 +90,7 @@ mcp-checkpoint scan --report-type md --output my-report.md
 
 ### 🧭 Baseline Checks
 
-Detects deviations from approved configurations (requires a baseline generated via `inspect` mode):
+Detects deviations from approved MCP components (requires a baseline generated via `inspect` mode):
 
 - **Rug Pull Attack**
   - **Tool Modified**
