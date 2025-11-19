@@ -1,11 +1,21 @@
 import asyncio
 import json
+import logging
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import yaml
 
-from ..scanner import ScanResult
-from ..security_utils import SecurityIssue, Severity, create_security_issue
+from ..security_utils import (
+    ScanResult,
+    SecurityIssue,
+    Severity,
+    create_security_issue,
+    safe_load_file,
+    MAX_CONFIG_FILE_SIZE,
+)
+
+logger = logging.getLogger(__name__)
 
 RISKY_COMMAND_SUBSTRINGS: Tuple[str, ...] = (
     "bash",
@@ -49,13 +59,12 @@ _CRITICAL_PERMS_ALL_LOWER: Set[str] = {
 
 def _load_config_file(path: str) -> Optional[Dict[str, Any]]:
     try:
-        with open(path, "r", encoding="utf-8") as f:
-            content = f.read()
-        try:
-            return json.loads(content)
-        except Exception:
-            return yaml.safe_load(content)
-    except Exception:
+        return safe_load_file(Path(path), MAX_CONFIG_FILE_SIZE)
+    except ValueError as e:
+        logger.warning(f"Config file size limit exceeded for '{path}': {e}")
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to load config file '{path}': {e}")
         return None
 
 
@@ -171,12 +180,6 @@ async def scan_for_excessive_tool_permissions(scan_result: ScanResult) -> List[S
                     if result.get("risky_command"):
                         indicators.append("risky_command")
 
-                    desc = (
-                        f"Server '{server_name}' is disabled but excessive host permissions detected for tools running on it."
-                    )
-                    if indicators:
-                        desc = f"{desc} Indicators: {', '.join(indicators)}."
-
                     entities: Dict[str, Any] = {
                         "disabled": True,
                         "risky_tools": server_to_tools.get(server_name, []),
@@ -192,11 +195,6 @@ async def scan_for_excessive_tool_permissions(scan_result: ScanResult) -> List[S
                         create_security_issue(
                             issue_type="Excessive Tool Permissions",
                             severity=Severity.LOW,
-                            description=desc,
-                            recommendation=(
-                                "Restrict MCP server privileges on the host. Remove wildcard or admin user permissions, and terminal or file-system flags. "
-                                "Keep only the least privileges required."
-                            ),
                             entity_type="configuration",
                             affected_server=server_name,
                             config_file=cfg_path,
@@ -222,16 +220,6 @@ async def scan_for_excessive_tool_permissions(scan_result: ScanResult) -> List[S
                 if risky_command:
                     indicators.append("risky_command")
 
-                desc = (
-                    f"Excessive host permissions detected for tools on server '{server_name}'. "
-                    f"Indicators: {', '.join(indicators)}."
-                )
-
-                recommendation = (
-                    "Restrict MCP server privileges on the host. Remove wildcard/admin user permissions and terminal/file-system flags; "
-                    "keep only least privileges required."
-                )
-
                 matched_entities: Dict[str, Any] = {
                     "risky_tools": server_to_tools.get(server_name, []),
                 }
@@ -246,8 +234,6 @@ async def scan_for_excessive_tool_permissions(scan_result: ScanResult) -> List[S
                     create_security_issue(
                         issue_type="Excessive Tool Permissions",
                         severity=severity,
-                        description=desc,
-                        recommendation=recommendation,
                         entity_type="configuration",
                         affected_server=server_name,
                         config_file=cfg_path,

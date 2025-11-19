@@ -1,11 +1,18 @@
 import asyncio
 import logging
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any, Callable, Dict
 
 from fastmcp import Client
 from fastmcp.client.transports import StreamableHttpTransport
 
-from .scanner import MCPServerInfo, ToolInfo, ResourceInfo, TransportType
+from .security_utils import (
+    MCPServerInfo,
+    ToolInfo,
+    ResourceInfo,
+    PromptInfo,
+    ResourceTemplateInfo,
+    TransportType
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +25,7 @@ class MCPConnector:
         except Exception as e:
             logger.warning(f"Error closing client for {server_name}: {e}")
     
-    async def connect_to_server(self, server: MCPServerInfo, progress=None) -> Optional[Client]:
+    async def connect_to_server(self, server: MCPServerInfo, progress: Optional[Callable[[str, Dict[str, Any]], None]] = None) -> Optional[Client]:
         try:
             transport = self._build_transport(server)
 
@@ -59,7 +66,12 @@ class MCPConnector:
             return client
             
         except Exception as e:
-            logger.error(f"Failed to connect to {server.name}: {e}")
+            if watchdog_task:
+                try:
+                    watchdog_task.cancel()
+                except Exception:
+                    pass
+            logger.error(f"Failed to connect to {server.name}: {e}", exc_info=False)
             return None
 
     def _build_transport(self, server: MCPServerInfo):
@@ -90,7 +102,11 @@ class MCPConnector:
                         url=server.endpoint,
                         auth="oauth"
                     )
-            elif server.command and 'mcp-remote' in (server.args or []):
+            elif server.command and server.args and 'mcp-remote' in server.args:
+                mcp_remote_index = server.args.index('mcp-remote')
+                if mcp_remote_index + 1 < len(server.args):
+                    remote_url = server.args[mcp_remote_index + 1]
+                    logger.info(f"Server '{server.name}' using mcp-remote with URL: {remote_url}")
                 return {
                     "mcpServers": {
                         server.name: {
@@ -101,7 +117,10 @@ class MCPConnector:
                     }
                 }
             else:
-                raise ValueError(f"HTTP/SSE server '{server.name}' has no endpoint URL and is not using mcp-remote")
+                raise ValueError(
+                    f"HTTP/SSE server '{server.name}' has no endpoint URL and is not using mcp-remote. "
+                    f"Please provide either an 'endpoint'/'url' field or configure mcp-remote in args."
+                )
 
         else:
             raise ValueError(f"Unsupported transport type: {server.type}")
@@ -133,7 +152,7 @@ class MCPConnector:
         else:
             return "unknown"
 
-    def _convert_tool(self, mcp_tool, server: MCPServerInfo) -> ToolInfo:
+    def _convert_tool(self, mcp_tool: Any, server: MCPServerInfo) -> ToolInfo:
         endpoint = self._get_server_endpoint(server)
 
         tags = []
@@ -160,20 +179,24 @@ class MCPConnector:
             input_schema=mcp_tool.inputSchema or {},
             output_schema=output_schema,
             tags=tags,
-                            server_name=server.name,
-                            server_endpoint=endpoint
-                        )
+            server_name=server.name,
+            server_endpoint=endpoint,
+            config_file=server.source_file or ""
+        )
 
-    async def discover_tools_and_resources(self, server: MCPServerInfo, progress=None) -> Tuple[
-        List[ToolInfo], List[ResourceInfo]]:
-        client = await self.connect_to_server(server, progress=progress)
-        if not client:
-            raise ConnectionError(f"Failed to connect to server: {server.name}")
-
-        tools = []
-        resources = []
-        
+    async def discover_all(self, server: MCPServerInfo, progress: Optional[Callable[[str, Dict[str, Any]], None]] = None) -> Tuple[
+        List[ToolInfo], List[ResourceInfo], List[PromptInfo], List[ResourceTemplateInfo]]:
+        client = None
         try:
+            client = await self.connect_to_server(server, progress=progress)
+            if not client:
+                raise RuntimeError(f"Failed to connect to server: {server.name}")
+
+            tools = []
+            resources = []
+            prompts = []
+            resource_templates = []
+            
             async def discover_tools():
                 try:
                     tools_response = await client.list_tools()
@@ -200,17 +223,46 @@ class MCPConnector:
                     logger.warning(f"Could not discover resources from {server.name}: {e}")
                     return []
 
-            tools, resources = await asyncio.gather(
+            async def discover_prompts():
+                try:
+                    prompts_response = await client.list_prompts()
+                    prompt_list = []
+                    for mcp_prompt in prompts_response:
+                        prompt = self._convert_prompt(mcp_prompt, server)
+                        prompt_list.append(prompt)
+                    logger.info(f"Discovered {len(prompt_list)} prompts from {server.name}")
+                    return prompt_list
+                except Exception as e:
+                    logger.warning(f"Could not discover prompts from {server.name}: {e}")
+                    return []
+
+            async def discover_resource_templates():
+                try:
+                    templates_response = await client.list_resource_templates()
+                    template_list = []
+                    for mcp_template in templates_response:
+                        template = self._convert_resource_template(mcp_template, server)
+                        template_list.append(template)
+                    logger.info(f"Discovered {len(template_list)} resource templates from {server.name}")
+                    return template_list
+                except Exception as e:
+                    logger.warning(f"Could not discover resource templates from {server.name}: {e}")
+                    return []
+
+            tools, resources, prompts, resource_templates = await asyncio.gather(
                 discover_tools(),
-                discover_resources()
+                discover_resources(),
+                discover_prompts(),
+                discover_resource_templates()
             )
 
-            return tools, resources
+            return tools, resources, prompts, resource_templates
 
         finally:
-            await self._close_client_safely(client, server.name)
+            if client is not None:
+                await self._close_client_safely(client, server.name)
 
-    def _convert_resource(self, mcp_resource, server: MCPServerInfo) -> ResourceInfo:
+    def _convert_resource(self, mcp_resource: Any, server: MCPServerInfo) -> ResourceInfo:
         endpoint = self._get_server_endpoint(server)
 
         tags = []
@@ -230,5 +282,73 @@ class MCPConnector:
             mime_type=getattr(mcp_resource, 'mimeType', "text/plain"),
             tags=tags,
             server_name=server.name,
-            server_endpoint=endpoint
+            server_endpoint=endpoint,
+            config_file=server.source_file or ""
+        )
+
+    def _convert_prompt(self, mcp_prompt: Any, server: MCPServerInfo) -> PromptInfo:
+        endpoint = self._get_server_endpoint(server)
+
+        tags = []
+        meta = getattr(mcp_prompt, 'meta', None) or getattr(mcp_prompt, '_meta', None)
+        if meta and isinstance(meta, dict):
+            fastmcp_meta = meta.get('_fastmcp', {})
+            if isinstance(fastmcp_meta, dict):
+                extracted_tags = fastmcp_meta.get('tags', [])
+                if isinstance(extracted_tags, list):
+                    tags = [str(tag) for tag in extracted_tags if tag is not None]
+
+        arguments = {}
+        try:
+            prompt_args = getattr(mcp_prompt, 'arguments', None)
+            if prompt_args:
+                if isinstance(prompt_args, dict):
+                    arguments = prompt_args
+                elif isinstance(prompt_args, list):
+                    for arg in prompt_args:
+                        if hasattr(arg, 'name'):
+                            arg_dict = {
+                                "name": arg.name,
+                                "description": getattr(arg, 'description', None),
+                                "required": getattr(arg, 'required', None)
+                            }
+                            arguments[arg.name] = arg_dict
+                        elif isinstance(arg, dict):
+                            arguments[arg.get('name', '')] = arg
+        except Exception:
+            pass
+
+        return PromptInfo(
+            name=mcp_prompt.name,
+            description=getattr(mcp_prompt, 'description', ""),
+            arguments=arguments,
+            title=getattr(mcp_prompt, 'title', None),
+            tags=tags,
+            server_name=server.name,
+            server_endpoint=endpoint,
+            config_file=server.source_file or ""
+        )
+
+    def _convert_resource_template(self, mcp_template: Any, server: MCPServerInfo) -> ResourceTemplateInfo:
+        endpoint = self._get_server_endpoint(server)
+
+        tags = []
+        meta = getattr(mcp_template, 'meta', None) or getattr(mcp_template, '_meta', None)
+        if meta and isinstance(meta, dict):
+            fastmcp_meta = meta.get('_fastmcp', {})
+            if isinstance(fastmcp_meta, dict):
+                extracted_tags = fastmcp_meta.get('tags', [])
+                if isinstance(extracted_tags, list):
+                    tags = [str(tag) for tag in extracted_tags if tag is not None]
+
+        return ResourceTemplateInfo(
+            uri_template=str(mcp_template.uriTemplate),
+            name=getattr(mcp_template, 'name', str(mcp_template.uriTemplate)),
+            description=getattr(mcp_template, 'description', ""),
+            mime_type=getattr(mcp_template, 'mimeType', "text/plain"),
+            title=getattr(mcp_template, 'title', None),
+            tags=tags,
+            server_name=server.name,
+            server_endpoint=endpoint,
+            config_file=server.source_file or ""
         )

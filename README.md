@@ -9,8 +9,7 @@
 
 ## :rocket: Overview
 
-MCP Checkpoint is a comprehensive security scanner for Model Context Protocol (MCP). Automatically discovers, analyzes, and
-secures MCP servers integrated with all major Agentic IDEs, Agents and Clients.
+MCP Checkpoint is a comprehensive security scanner for Model Context Protocol (MCP). Automatically discovers, analyzes, and secures MCP servers integrated with all major Agentic IDEs, Agents and Clients.
 
 <br>
 
@@ -20,9 +19,11 @@ secures MCP servers integrated with all major Agentic IDEs, Agents and Clients.
 ## :bulb: Features
 
 - **🔍 Auto-Discovery**: Finds known MCP configurations for popular Agentic IDEs like Cursor, Windsurf, VS Code, Claude Desktop, and more
-- **🔧 Tool & Resource Inventory**: Connects to MCP servers and catalogs available tools and resources
+- **🔧 Tool, Resource & Prompt Inventory**: Connects to MCP servers and catalogs available tools, resources, and prompt templates
 - **🛡️ Security Analysis**: Specialized security checks including prompt injection, Cross-server Tool Shadowing, Tool poisoning, Tool name ambiguity, [and more..](#beginner-security-checks)
-- **📊 Comprehensive Reporting**: JSON and Markdown reports with actionable security recommendations
+- **🧭 Baseline Drift Detection**: Captures approved MCP components and detects rug pulls attacks
+- **📊 Comprehensive Reporting**: Generates JSON and Markdown reports with actionable findings
+- **📜 Audit Trail**: Timestamped baselines and reports for full traceability of changes and findings
 
 
 ## :toolbox: Installation
@@ -34,10 +35,10 @@ pip install mcp-checkpoint
 ## :running: Quick Start
 
 ```bash
-# Scan all configurations with security analysis
+# Scan all configurations with security analysis (auto-detects baseline.json if present)
 mcp-checkpoint scan
 
-# Inspect configurations without security scanning
+# Inspect configurations and generate baseline (defaults to baseline.json)
 mcp-checkpoint inspect
 
 # Use custom configuration file
@@ -47,6 +48,10 @@ mcp-checkpoint scan --config /path/to/config.json
  mcp-checkpoint scan \
    --config /path/to/cursor.mcp.json \
    --config /path/to/vscode.mcp.json
+
+# Use custom baseline file path
+mcp-checkpoint inspect --baseline /path/to/my-baseline.json
+mcp-checkpoint scan --baseline /path/to/my-baseline.json
 
 # Generate markdown report
 mcp-checkpoint scan --report-type md
@@ -58,18 +63,21 @@ mcp-checkpoint scan --report-type md --output my-report.md
 
 #### :gear: Command Options
 
-| Option                    | Description                    |
-|---------------------------|--------------------------------|
-| `--config`                | Custom configuration file path |
-| `--report-type {json,md}` | Output format (default: json)  |
-| `--output`                | Custom output file path        |
-| `--verbose`               | Detailed terminal output       |
-| `--show-logs`             | Display debug logs in terminal |
+| Option                    | Description                                                         |
+|---------------------------|---------------------------------------------------------------------|
+| `--config`                | Custom configuration file path (can be used multiple times)         |
+| `--baseline`              | Baseline file for drift detection (scan) or creation (inspect)      |
+| `--report-type {json,md}` | Output format (default: json)                                       |
+| `--output`                | Custom output file path                                             |
+| `--verbose`               | Detailed terminal output                                            |
+| `--show-logs`             | Display debug logs in terminal                                      |
 
 
 ## :beginner: Security Checks
 
-- **Prompt Injection**
+### 🛡️ Standard Checks
+
+- **Prompt Injection**  
 - **Indirect Prompt Injection**
 - **Cross-Server Tool Shadowing**
 - **Tool Poisoning**
@@ -80,6 +88,15 @@ mcp-checkpoint scan --report-type md --output my-report.md
 - **Excessive Tool Permissions**
 - **Hardcoded Secrets**
 
+### 🧭 Baseline Checks
+
+Detects deviations from approved configurations (requires a baseline generated via `inspect` mode):
+
+- **Rug Pull Attack**
+  - **Tool Modified**
+  - **Resource Modified**
+  - **Resource Template Modified**
+  - **Prompt Modified**
 
 ### :page_with_curl: Logging
 
@@ -98,6 +115,9 @@ mcp-checkpoint scan --show-logs
 
 Test MCP Checkpoint using our intentionally vulnerable MCP servers. For details, see the [demo guide](demo-mcp-server/README.md).
 
+### :office: Enterprise Edition
+
+Get enterprise-grade protection with **Active Insight Mode**, offering ***runtime agent behavior analysis***, enhanced features, and additional scan capabilities — [book a demo](https://calendly.com/mohan-/aira-security) today.
 
 ### :star2: Community
 

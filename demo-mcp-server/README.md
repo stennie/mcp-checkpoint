@@ -1,10 +1,10 @@
-# Demo MCP Servers
+# 🧪 Demo MCP Servers
 
-Intentionally vulnerable demo MCP servers that demonstrate various security issues MCP Checkpoint can detect.
+Intentionally vulnerable demo MCP servers that showcase the security issues MCP Checkpoint can detect.
 
 **All demo servers and scans run entirely locally on your machine - no data is sent externally.**
 
-## 1) Setup
+### 1️⃣  Setup
 
 Navigate to the demo-mcp-server directory and install dependencies:
 
@@ -13,26 +13,32 @@ cd demo-mcp-server
 pip install fastmcp
 ```
 
-## 2) Run the servers
+### 2️⃣  Run the servers
 
 ```bash
 python demo_server.py
 ```
 
 This starts two servers:
-- **ShopMCPServer**: `http://127.0.0.1:3000/mcp` (contains security vulnerabilities)
-- **PaymentsServer**: `http://127.0.0.1:3001/mcp` (clean server for cross-server tool shadowing detection)
+- **ShopMCPServer**: `http://127.0.0.1:3000/mcp` (intentionally vulnerable)
+- **PaymentsServer**: `http://127.0.0.1:3001/mcp` (clean; used for cross-server tool shadowing detection)
 
-Custom ports: `python demo_server.py 3000 3001`
+To use custom ports: 
+```bash
+python demo_server.py 3000 3001
+```
 
-Press Ctrl+C to stop both servers.
+Press `Ctrl+C` to stop both servers.
 
-## 3) Scan with MCP Checkpoint
+### 3️⃣  Scan with MCP Checkpoint
 
 ```bash
 # Install if needed
 pip install mcp-checkpoint
 
-# Run scan (from repository root folder)
+# Run scan with baseline (from repository root)
+mcp-checkpoint scan --config ./demo-mcp-server/demo_config.json --baseline ./demo-mcp-server/demo_baseline.json
+
+# Run scan without baseline checks (from repository root)
 mcp-checkpoint scan --config ./demo-mcp-server/demo_config.json
 ```
