@@ -1,6 +1,6 @@
 # 🧪 Demo MCP Servers
 
-Intentionally vulnerable demo MCP servers that showcase the security issues MCP Checkpoint can detect.
+Intentionally vulnerable demo MCP servers that showcase the security issues MCP Armor can detect.
 
 **All demo servers and scans run entirely locally on your machine - no data is sent externally.**
 
@@ -30,15 +30,15 @@ python demo_server.py 3000 3001
 
 Press `Ctrl+C` to stop both servers.
 
-### 3️⃣  Scan with MCP Checkpoint
+### 3️⃣  Scan with MCP Armor
 
 ```bash
 # Install if needed
-pip install mcp-checkpoint
+pip install mcp-armor
 
 # Run scan with baseline (from repository root)
-mcp-checkpoint scan --config ./demo-mcp-server/demo_config.json --baseline ./demo-mcp-server/demo_baseline.json
+mcp-armor scan --config ./demo-mcp-server/demo_config.json --baseline ./demo-mcp-server/demo_baseline.json
 
 # Run scan without baseline checks (from repository root)
-mcp-checkpoint scan --config ./demo-mcp-server/demo_config.json
+mcp-armor scan --config ./demo-mcp-server/demo_config.json
 ```

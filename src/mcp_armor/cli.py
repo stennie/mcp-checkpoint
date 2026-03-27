@@ -93,11 +93,11 @@ def print_banner():
     console = Console()
 
     banner = """
-███    ███  ██████ ██████       ██████ ██   ██ ███████  ██████ ██   ██ ██████   ██████  ██ ███    ██ ████████ 
-████  ████ ██      ██   ██     ██      ██   ██ ██      ██      ██  ██  ██   ██ ██    ██ ██ ████   ██    ██    
-██ ████ ██ ██      ██████      ██      ███████ █████   ██      █████   ██████  ██    ██ ██ ██ ██  ██    ██    
-██  ██  ██ ██      ██          ██      ██   ██ ██      ██      ██  ██  ██      ██    ██ ██ ██  ██ ██    ██    
-██      ██  ██████ ██           ██████ ██   ██ ███████  ██████ ██   ██ ██       ██████  ██ ██   ████    ██ 
+███    ███  ██████ ██████      █████  ██████  ███    ███  ██████  ██████  
+████  ████ ██      ██   ██    ██   ██ ██   ██ ████  ████ ██    ██ ██   ██ 
+██ ████ ██ ██      ██████     ███████ ██████  ██ ████ ██ ██    ██ ██████  
+██  ██  ██ ██      ██         ██   ██ ██  ██  ██  ██  ██ ██    ██ ██  ██  
+██      ██  ██████ ██         ██   ██ ██   ██ ██      ██  ██████  ██   ██ 
 """
 
     console.print(banner, style="turquoise2")
@@ -286,7 +286,7 @@ def setup_logging(show_logs: bool = False):
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
 
-    log_file = log_dir / "mcp_checkpoint.log"
+    log_file = log_dir / "mcp_armor.log"
 
     formatter = logging.Formatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -315,7 +315,7 @@ def format_scan_results_as_markdown(results, baseline_status: Optional[dict] = N
     from .security_utils import ScanResult, AffectedEntity, get_generic_description, get_generic_recommendation
     md = []
 
-    md.append("# MCP Checkpoint Scan Report")
+    md.append("# MCP Armor Scan Report")
     md.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     md.append("")
 
@@ -641,7 +641,7 @@ def save_report_to_file(content, filepath, report_type, suppress_print=False):
 
 
 async def scan_command(args):
-    print('\n🏃 Running MCP Checkpoint in scan mode...\n')
+    print('\n🏃 Running MCP Armor in scan mode...\n')
 
     from .scanner import MCPConfigScanner
     from .security_utils import (
@@ -682,19 +682,19 @@ async def scan_command(args):
                 else:
                     baseline_warning = f"Baseline checks skipped. Baseline file not found or invalid: {baseline_path_str}."
                     print(f"  ⚠️  Skipping baseline checks as no valid baseline file was provided: {baseline_path_str}.")
-                    print(f"     💡 Run `mcp-checkpoint inspect --baseline {baseline_path_str}` first to create one.")
+                    print(f"     💡 Run `mcp-armor inspect --baseline {baseline_path_str}` first to create one.")
             else:
                 baseline_warning = f"Baseline checks skipped. Baseline file not found or invalid: {baseline_path_str}."
                 print(f"  ⚠️  Skipping baseline checks as no valid baseline file was provided: {baseline_path_str}.")
-                print(f"     💡 Run `mcp-checkpoint inspect --baseline {baseline_path_str}` first to create one.\n")
+                print(f"     💡 Run `mcp-armor inspect --baseline {baseline_path_str}` first to create one.\n")
         except ValueError as e:
             baseline_warning = f"Baseline checks skipped. Invalid baseline file: {baseline_path_str}."
             print(f"  ⚠️  Skipping baseline checks as no valid baseline file was provided: {baseline_path_str}.")
-            print(f"     💡 Run `mcp-checkpoint inspect --baseline {baseline_path_str}` first to create one.\n")
+            print(f"     💡 Run `mcp-armor inspect --baseline {baseline_path_str}` first to create one.\n")
     else:
         baseline_warning = "Baseline checks skipped. No baseline file found."
         print(f"  ⚠️  Skipping baseline checks as no baseline file was found.")
-        print(f"     💡 Run `mcp-checkpoint inspect` first to create one.\n")
+        print(f"     💡 Run `mcp-armor inspect` first to create one.\n")
     missing_paths = []
     if not custom_paths:
         print("  📄 No config provided — searching known locations…")
@@ -1029,7 +1029,7 @@ async def scan_command(args):
 
 
 async def inspect_command(args):
-    print('\n🏃 Running MCP Checkpoint in inspect mode...\n')
+    print('\n🏃 Running MCP Armor in inspect mode...\n')
 
     from .scanner import MCPConfigScanner
     from .security_utils import ScanResult
@@ -1405,27 +1405,27 @@ def main():
         epilog="""
 Examples:
     ## Inspect Mode (Inventory and Generate Baseline)
-        mcp-checkpoint inspect                                 # Inspect all known configs and generate baseline.json (no security analysis)
-        mcp-checkpoint inspect --config ./config.json          # Inspect specific config and generate baseline.json (no security analysis)
-        mcp-checkpoint inspect --config ./config1.json \\
+        mcp-armor inspect                                 # Inspect all known configs and generate baseline.json (no security analysis)
+        mcp-armor inspect --config ./config.json          # Inspect specific config and generate baseline.json (no security analysis)
+        mcp-armor inspect --config ./config1.json \\
                             --config ./config2.json            # Inspect multiple configs and generate baseline.json (no security analysis)
-        mcp-checkpoint inspect --baseline ./my-baseline.json   # Generate custom baseline file (defaults to baseline.json if not specified)
-        mcp-checkpoint inspect --config ./config.json \\
+        mcp-armor inspect --baseline ./my-baseline.json   # Generate custom baseline file (defaults to baseline.json if not specified)
+        mcp-armor inspect --config ./config.json \\
                             --baseline ./my-baseline.json      # Inspect specific config and generate custom baseline file
-        mcp-checkpoint inspect --output results.json           # Save results to file
-        mcp-checkpoint inspect --verbose                       # Detailed output
+        mcp-armor inspect --output results.json           # Save results to file
+        mcp-armor inspect --verbose                       # Detailed output
     
     ## Scan Mode (Security Analysis)
-        mcp-checkpoint scan                                    # Scan all known configs using default baseline.json (if present) for security risks
-        mcp-checkpoint scan --config ./config.json             # Scan specific config using default baseline.json (if present)for security risks
-        mcp-checkpoint scan --config ./config1.json \\
+        mcp-armor scan                                    # Scan all known configs using default baseline.json (if present) for security risks
+        mcp-armor scan --config ./config.json             # Scan specific config using default baseline.json (if present)for security risks
+        mcp-armor scan --config ./config1.json \\
                         --config ./config2.json                # Scan multiple configs using default baseline.json (if present) in one run
-        mcp-checkpoint scan --baseline ./my-baseline.json      # Scan all known configs with custom baseline for drift detection
-        mcp-checkpoint scan --config ./config.json \\
+        mcp-armor scan --baseline ./my-baseline.json      # Scan all known configs with custom baseline for drift detection
+        mcp-armor scan --config ./config.json \\
                         --baseline ./my-baseline.json          # Scan specific config with custom baseline for drift detection
-        mcp-checkpoint scan --output results.json              # Save results to file
-        mcp-checkpoint scan --verbose                          # Detailed output
-        mcp-checkpoint scan --show-logs                        # Display debug logs in terminal
+        mcp-armor scan --output results.json              # Save results to file
+        mcp-armor scan --verbose                          # Detailed output
+        mcp-armor scan --show-logs                        # Display debug logs in terminal
     
 Note: 
     First-time scan will download the ML model for prompt injection check (~290MB) from Hugging Face.
