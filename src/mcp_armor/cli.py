@@ -102,7 +102,7 @@ def print_banner():
 
     console.print(banner, style="turquoise2")
 
-    banner_text = Text("                            ｂｙ  Ａｉｒａ  Ｓｅｃｕｒｉｔｙ",
+    banner_text = Text("                                          ｂｙ  Ａｉｒａ  Ｓｅｃｕｒｉｔｙ",
                        style="bold magenta")
     console.print(banner_text)
     console.print()
