@@ -1,19 +1,19 @@
 <p align="center" style="margin-bottom: 0; line-height: 0;">
-<img src="https://github.com/aira-security/mcp-checkpoint/blob/main/mcp-checkpoint.png" width="350"> 
+<img src="https://github.com/aira-security/mcp-armor/blob/main/mcp-armor.png" width="350"> 
 </p>
 <h3 align="center" margin-top: -20px; margin-bottom: 70px;>
-   MCP Checkpoint
+   MCP Armor
 </h3>
 
 <br>
 
 ## :rocket: Overview
 
-MCP Checkpoint is a comprehensive security scanner for Model Context Protocol (MCP). Automatically discovers, analyzes, and secures MCP servers integrated with all major Agentic IDEs, Agents and Clients.
+MCP Armor is a comprehensive security scanner for Model Context Protocol (MCP). Automatically discovers, analyzes, and secures MCP servers integrated with all major Agentic IDEs, Agents and Clients.
 
 <br>
 
-![MCP Checkpoint](https://github.com/aira-security/mcp-checkpoint/blob/main/mcp-checkpoint.gif)
+![MCP Armor](https://github.com/aira-security/mcp-armor/blob/main/mcp-armor.gif)
 
 
 ## :bulb: Features
@@ -29,36 +29,36 @@ MCP Checkpoint is a comprehensive security scanner for Model Context Protocol (M
 ## :toolbox: Installation
 
 ```bash
-pip install mcp-checkpoint
+pip install mcp-armor
 ```
 
 ## :running: Quick Start
 
 ```bash
 # Scan all configurations with security analysis (auto-detects baseline.json if present)
-mcp-checkpoint scan
+mcp-armor scan
 
 # Inspect configurations and generate baseline (defaults to baseline.json)
-mcp-checkpoint inspect
+mcp-armor inspect
 
 # Use custom configuration file
-mcp-checkpoint scan --config /path/to/config.json
+mcp-armor scan --config /path/to/config.json
 
 # Scan multiple configuration files
- mcp-checkpoint scan \
+ mcp-armor scan \
    --config /path/to/cursor.mcp.json \
    --config /path/to/vscode.mcp.json
 
 # Use custom baseline file path
-mcp-checkpoint inspect --baseline /path/to/my-baseline.json
-mcp-checkpoint scan --baseline /path/to/my-baseline.json
+mcp-armor inspect --baseline /path/to/my-baseline.json
+mcp-armor scan --baseline /path/to/my-baseline.json
 
 # Generate markdown report
-mcp-checkpoint scan --report-type md
+mcp-armor scan --report-type md
 
 # Save to custom file
-mcp-checkpoint scan --output my-report.json
-mcp-checkpoint scan --report-type md --output my-report.md
+mcp-armor scan --output my-report.json
+mcp-armor scan --report-type md --output my-report.md
 ```
 
 #### :gear: Command Options
@@ -100,20 +100,20 @@ Detects deviations from approved MCP components (requires a baseline generated v
 
 ### :page_with_curl: Logging
 
-Logs are automatically saved to `logs/mcp_checkpoint.log`:
+Logs are automatically saved to `logs/mcp_armor.log`:
 
 ```bash
 # Default: logs saved to file only
-mcp-checkpoint scan
+mcp-armor scan
 
 # Show logs in terminal too
-mcp-checkpoint scan --show-logs
+mcp-armor scan --show-logs
 ```
 
 
 ### :test_tube: Demo
 
-Test MCP Checkpoint using our intentionally vulnerable MCP servers. For details, see the [demo guide](demo-mcp-server/README.md).
+Test MCP Armor using our intentionally vulnerable MCP servers. For details, see the [demo guide](demo-mcp-server/README.md).
 
 
 ### :zap: Want More?
@@ -145,9 +145,9 @@ This open-source version covers static MCP configuration scanning. For teams tha
 
 **Q: Is my source code ever shared, or does everything run locally?**
 
-MCP Checkpoint runs entirely locally. Inspect and scan modes analyze your MCP configurations, detect MCP servers integrated with your agents, and evaluate them directly on your machine. Prompt injection checks use our open-source model `Aira-security/FT-Llama-Prompt-Guard-2`, downloaded from Hugging Face to your local environment, ensuring your data and code is never shared externally.
+MCP Armor runs entirely locally. Inspect and scan modes analyze your MCP configurations, detect MCP servers integrated with your agents, and evaluate them directly on your machine. Prompt injection checks use our open-source model `Aira-security/FT-Llama-Prompt-Guard-2`, downloaded from Hugging Face to your local environment, ensuring your data and code is never shared externally.
 
 
 ### :balance_scale: License
 
-Distributed under the Apache 2.0 License. See [LICENSE](https://github.com/aira-security/mcp-checkpoint/blob/main/LICENSE) for more information.
+Distributed under the Apache 2.0 License. See [LICENSE](https://github.com/aira-security/mcp-armor/blob/main/LICENSE) for more information.

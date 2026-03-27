@@ -3,7 +3,7 @@ requires = ["setuptools~=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mcp-checkpoint"
+name = "mcp-armor"
 version = "2.1.1"
 description = "A comprehensive MCP configuration scanner with client-aware security analysis."
 authors = [
@@ -14,8 +14,8 @@ readme = "README.md"
 requires-python = ">=3.10,<3.16"
 license-files = ["LICEN[CS]E*"]
 keywords = [
-    "mcp",
-    "model-context-protocol",
+    "mcp-armor",
+    "mcp-armor-security",
     "security",
     "prompt-injection",
     "mcp-security",
@@ -45,12 +45,12 @@ classifiers = [
 ]
 
 [project.scripts]
-mcp-checkpoint = "mcp_checkpoint.cli:main"
+mcp-armor = "mcp_armor.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/aira-security/mcp-checkpoint"
-Repository = "https://github.com/aira-security/mcp-checkpoint"
-Issues = "https://github.com/aira-security/mcp-checkpoint/issues"
+Homepage = "https://github.com/aira-security/mcp-armor"
+Repository = "https://github.com/aira-security/mcp-armor"
+Issues = "https://github.com/aira-security/mcp-armor/issues"
 
 [tool.setuptools]
 
@@ -59,7 +59,7 @@ Issues = "https://github.com/aira-security/mcp-checkpoint/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["mcp_checkpoint*"]
+include = ["mcp_armor*"]
 
 [tool.black]
 line-length = 88
