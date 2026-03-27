@@ -4,15 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-armor"
-version = "2.1.1"
+version = "1.0.0"
 description = "A comprehensive MCP configuration scanner with client-aware security analysis."
 authors = [
     { name = "Aira Security", email = "founders@airasecurity.ai" }
 ]
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 readme = "README.md"
 requires-python = ">=3.10,<3.16"
-license-files = ["LICEN[CS]E*"]
 keywords = [
     "mcp-armor",
     "mcp-armor-security",

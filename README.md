@@ -7,7 +7,7 @@
 
 <br>
 
-## :rocket: Overview
+## 🚀 Overview
 
 MCP Armor is a comprehensive security scanner for Model Context Protocol (MCP). Automatically discovers, analyzes, and secures MCP servers integrated with all major Agentic IDEs, Agents and Clients.
 
@@ -16,7 +16,7 @@ MCP Armor is a comprehensive security scanner for Model Context Protocol (MCP). 
 ![MCP Armor](https://github.com/aira-security/mcp-armor/blob/main/mcp-armor.gif)
 
 
-## :bulb: Features
+## 💡 Features
 
 - **🔍 Auto-Discovery**: Finds known MCP configurations for popular Agentic IDEs like Cursor, Windsurf, VS Code, Claude Desktop, and more
 - **🔧 Tool, Resource & Prompt Inventory**: Connects to MCP servers and catalogs available tools, resources, and prompt templates
@@ -26,13 +26,13 @@ MCP Armor is a comprehensive security scanner for Model Context Protocol (MCP). 
 - **📜 Audit Trail**: Timestamped baselines and reports for full traceability of changes and findings
 
 
-## :toolbox: Installation
+## 🧰 Installation
 
 ```bash
 pip install mcp-armor
 ```
 
-## :running: Quick Start
+## 🏃 Quick Start
 
 ```bash
 # Scan all configurations with security analysis (auto-detects baseline.json if present)
@@ -61,7 +61,7 @@ mcp-armor scan --output my-report.json
 mcp-armor scan --report-type md --output my-report.md
 ```
 
-#### :gear: Command Options
+#### ⚙️ Command Options
 
 | Option                    | Description                                                         |
 |---------------------------|---------------------------------------------------------------------|
@@ -73,7 +73,7 @@ mcp-armor scan --report-type md --output my-report.md
 | `--show-logs`             | Display debug logs in terminal                                      |
 
 
-## :beginner: Security Checks
+## 🔰 Security Checks
 
 ### 🛡️ Standard Checks
 
@@ -98,7 +98,7 @@ Detects deviations from approved MCP components (requires a baseline generated v
   - **Resource Template Modified**
   - **Prompt Modified**
 
-### :page_with_curl: Logging
+### 📃 Logging
 
 Logs are automatically saved to `logs/mcp_armor.log`:
 
@@ -111,12 +111,12 @@ mcp-armor scan --show-logs
 ```
 
 
-### :test_tube: Demo
+### 🧪 Demo
 
 Test MCP Armor using our intentionally vulnerable MCP servers. For details, see the [demo guide](demo-mcp-server/README.md).
 
 
-### :zap: Want More?
+### ⚡ Want More?
 
 This open-source version covers static MCP configuration scanning. For teams that need deeper protection, [Aira Security](https://airasecurity.ai) offers a full enterprise platform with:
 
@@ -137,17 +137,17 @@ This open-source version covers static MCP configuration scanning. For teams tha
 🚀 [See Aira in Action](https://calendly.com/mohan-/aira-security) to experience the full platform.
 
 
-### :star2: Community
+### 🌟 Community
 
  [Join our Slack](https://join.slack.com/t/airasecurityc-jwt3316/shared_invite/zt-3iar5tm3k-R5js~WfnDIHRNtSgd7D0Bg) - a space for developers and security engineers building together to secure AI agents.
 
-### :question: FAQs
+### ❓ FAQs
 
 **Q: Is my source code ever shared, or does everything run locally?**
 
 MCP Armor runs entirely locally. Inspect and scan modes analyze your MCP configurations, detect MCP servers integrated with your agents, and evaluate them directly on your machine. Prompt injection checks use our open-source model `Aira-security/FT-Llama-Prompt-Guard-2`, downloaded from Hugging Face to your local environment, ensuring your data and code is never shared externally.
 
 
-### :balance_scale: License
+### ⚖️ License
 
 Distributed under the Apache 2.0 License. See [LICENSE](https://github.com/aira-security/mcp-armor/blob/main/LICENSE) for more information.
