@@ -13,7 +13,7 @@ MCP Armor is a comprehensive security scanner for Model Context Protocol (MCP). 
 
 <br>
 
-![MCP Armor](https://github.com/aira-security/mcp-armor/blob/main/mcp-armor.gif?raw=true&v=3)
+![MCP Armor](https://github.com/aira-security/mcp-armor/blob/main/mcp-armor.gif?raw=true&v=4)
 
 
 ## 💡 Features
